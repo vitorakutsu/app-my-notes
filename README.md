@@ -2,6 +2,8 @@
 
 O **MyNotes App** é uma aplicação desenvolvida para gerenciar anotações de maneira fácil e organizada. Foi implementado como parte da matéria **Ferramentas Computacionais IV**.
 
+<img src="./prototype.png" alt="Prototype" width="250"/>
+
 ## 📚 Funcionalidades
 
 - **Filtrar Anotações**: Filtre suas anotações com base na prioridade (baixa, média ou alta).
