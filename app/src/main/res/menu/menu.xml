@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+            <item
+                android:id="@+id/newNote"
+                android:title="Nova anotação"
+                android:icon="@drawable/baseline_add_24"
+                app:showAsAction="never" />
+
+            <item
+                android:id="@+id/sortPriority"
+                android:title="Ordenar por prioridade"
+                android:icon="@drawable/baseline_filter_alt_24"
+                app:showAsAction="never" />
+
+            <item
+                android:id="@+id/sortOrder"
+                android:title="Ordenar por ordem"
+                android:icon="@drawable/baseline_filter_alt_24"
+                app:showAsAction="never" />
+
+</menu>
