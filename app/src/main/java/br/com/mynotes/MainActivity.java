@@ -22,6 +22,8 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.List;
 
+import Controller.NoteController;
+import DB.Connection;
 import br.com.mynotes.adapters.NoteAdapter;
 import br.com.mynotes.entities.Note;
 
@@ -30,6 +32,8 @@ public class MainActivity extends AppCompatActivity {
     private RecyclerView recyclerView;
     private NoteAdapter noteAdapter;
     private List<Note> notes = new ArrayList<>();
+    private Connection connection;
+    private NoteController noteController;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -85,6 +89,7 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+        noteController = new NoteController(this);
         super.onCreate(savedInstanceState);
         EdgeToEdge.enable(this);
         setContentView(R.layout.activity_main);
@@ -107,16 +112,33 @@ public class MainActivity extends AppCompatActivity {
         noteAdapter = new NoteAdapter(this, notes);
         recyclerView.setAdapter(noteAdapter);
 
+        //createNotes();
         loadNotes();
 
         Toolbar toolbar = findViewById(R.id.toolbar);
         setSupportActionBar(toolbar);
     }
 
+    private void createNotes(){
+        Model.Note note1 = new Model.Note("Note 1", "Note 1 text", "low");
+        Model.Note note2 = new Model.Note("Note 2", "Note 2 text", "medium");
+        Model.Note note3 = new Model.Note("Note 3", "Note 3 text", "high");
+
+        this.noteController.create(note1);
+        this.noteController.create(note2);
+        this.noteController.create(note3);
+    }
+
     private void loadNotes() {
-        notes.add(new Note("Note 1", "This is the note text.", "low"));
-        notes.add(new Note("Note 2", "This is the note text.", "medium"));
-        notes.add(new Note("Note 3", "This is the note text.", "high"));
+        List<Model.Note> notesReturned = this.noteController.get();
+
+        for (int i = 0; i < notesReturned.size(); i++) {
+            this.notes.add(new Note(
+                    notesReturned.get(i).getNote_title(),
+                    notesReturned.get(i).getNote_text(),
+                    notesReturned.get(i).getNote_priority()
+            ));
+        }
 
         noteAdapter.notifyDataSetChanged();
     }
