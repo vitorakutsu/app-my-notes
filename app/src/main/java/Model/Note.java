@@ -8,6 +8,13 @@ public class Note {
 
     public Note(){}
 
+    public Note(int note_id, String note_title, String note_text, String note_priority) {
+        this.note_id = note_id;
+        this.note_title = note_title;
+        this.note_text = note_text;
+        this.note_priority = note_priority;
+    }
+
     public Note(String note_title, String note_text, String note_priority) {
         this.note_title = note_title;
         this.note_text = note_text;
