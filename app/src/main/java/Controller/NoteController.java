@@ -23,8 +23,8 @@ public class NoteController {
     }
 
     @SuppressLint("Range")
-    public List<Note> get(){
-        Cursor cursor = notesService.get();
+    public List<Note> get(String priority, String sort){
+        Cursor cursor = notesService.get(priority, sort);
 
         try{
             List<Note> notes = new ArrayList<>();
@@ -47,4 +47,7 @@ public class NoteController {
         return null;
     }
 
+    public void delete(int noteId) {
+        notesService.delete(noteId);
+    }
 }

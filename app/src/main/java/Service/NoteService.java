@@ -24,12 +24,40 @@ public class NoteService {
         contentValues.put("note_priority", note.getNote_priority());
 
         connection.connect();
-        connection.create("notes", contentValues);
+        long id = connection.create("notes", contentValues);
+        connection.disconnect();
+        note.setNote_id((int) id);
     }
 
-    public Cursor get() {
+    public Cursor get(String priority, String sortOrder) {
         connection.connect();
-        Cursor cursor = connection.get("SELECT * FROM notes");
+
+        String whereClause = "";
+        if (priority != null && !priority.isEmpty()) {
+            whereClause = "note_priority = '" + priority + "'";
+        }
+
+        String orderByClause = "";
+        if (sortOrder != null && !sortOrder.isEmpty()) {
+            orderByClause = "ORDER BY " + sortOrder;
+        }
+
+        String query = "SELECT * FROM notes";
+        if (!whereClause.isEmpty()) {
+            query += " WHERE " + whereClause;
+        }
+        if (!orderByClause.isEmpty()) {
+            query += " " + orderByClause;
+        }
+
+        Cursor cursor = connection.get(query);
         return cursor;
+    }
+
+
+    public void delete(int noteId) {
+        connection.connect();
+        connection.delete("notes", "note_id = " + noteId);
+        connection.disconnect();
     }
 }

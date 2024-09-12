@@ -1,28 +1,40 @@
 package br.com.mynotes.adapters;
 
+import android.annotation.SuppressLint;
 import android.content.Context;
 import android.graphics.drawable.GradientDrawable;
+import android.os.Handler;
+import android.view.GestureDetector;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
+
 import androidx.annotation.NonNull;
-import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.recyclerview.widget.RecyclerView;
 
 import java.util.List;
 
+import Controller.NoteController;
+import Model.Note;
+import br.com.mynotes.MainActivity;
 import br.com.mynotes.R;
-import br.com.mynotes.entities.Note;
+import br.com.mynotes.utils.NoteUtils;
 
 public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder> {
 
     private List<Note> notes;
     private Context context;
+    private NoteController noteController;
+
+    private static final int LONG_PRESS_DURATION = 2000;
 
     public NoteAdapter(Context context, List<Note> notes) {
         this.context = context;
         this.notes = notes;
+        this.noteController = new NoteController(context);
     }
 
     @NonNull
@@ -33,32 +45,79 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     }
 
     @Override
-    public void onBindViewHolder(@NonNull NoteViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull NoteViewHolder holder, @SuppressLint("RecyclerView") int position) {
         Note note = notes.get(position);
-        holder.titleTextView.setText(note.getTitle());
-        holder.textTextView.setText(note.getText());
+        holder.titleTextView.setText(note.getNote_title());
+        holder.descriptionTextView.setText(note.getNote_text());
 
-        GradientDrawable drawable = new GradientDrawable();
-        drawable.setShape(GradientDrawable.RECTANGLE);
-        drawable.setCornerRadius(25);
-
-        int backgroundColor = getBackgroundColorForPriority(note.getPriority());
-        drawable.setColor(backgroundColor);
-
+        String priority = NoteUtils.getPriority(note.getNote_priority());
+        GradientDrawable drawable = NoteUtils.createNoteBackground(context, priority);
         holder.itemView.setBackground(drawable);
+
+        holder.itemView.setOnTouchListener(new View.OnTouchListener() {
+            private GestureDetector gestureDetector = new GestureDetector(context, new GestureDetector.SimpleOnGestureListener() {
+                @Override
+                public void onLongPress(MotionEvent e) {
+                    startDeleteTimer(holder, position);
+                }
+
+                @Override
+                public boolean onSingleTapUp(MotionEvent e) {
+                    // Detect a short click (tap up) and show note details
+                    if (context instanceof MainActivity) {
+                        ((MainActivity) context).showNoteDetailsModal(note);
+                    } else {
+                        Toast.makeText(context, "Contexto inválido", Toast.LENGTH_SHORT).show();
+                    }
+                    return true;
+                }
+            });
+
+            private Handler handler = new Handler();
+            private Runnable deleteRunnable;
+
+            private void startDeleteTimer(NoteViewHolder holder, int position) {
+                deleteRunnable = new Runnable() {
+                    @Override
+                    public void run() {
+                        int adapterPosition = holder.getAdapterPosition();
+                        if (adapterPosition != RecyclerView.NO_POSITION) {
+                            deleteNoteAt(adapterPosition);
+                        }
+                    }
+                };
+                handler.postDelayed(deleteRunnable, LONG_PRESS_DURATION);
+            }
+
+            private void cancelDeleteTimer() {
+                if (deleteRunnable != null) {
+                    handler.removeCallbacks(deleteRunnable);
+                }
+            }
+
+            @Override
+            public boolean onTouch(View v, MotionEvent event) {
+                gestureDetector.onTouchEvent(event);
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        startDeleteTimer(holder, holder.getAdapterPosition());
+                        return true;
+                    case MotionEvent.ACTION_UP:
+                    case MotionEvent.ACTION_CANCEL:
+                        cancelDeleteTimer();
+                        return true;
+                }
+                return false;
+            }
+        });
     }
 
-    private int getBackgroundColorForPriority(String priority) {
-        switch (priority) {
-            case "low":
-                return context.getResources().getColor(R.color.low_priority);
-            case "medium":
-                return context.getResources().getColor(R.color.medium_priority);
-            case "high":
-                return context.getResources().getColor(R.color.high_priority);
-            default:
-                return 0;
-        }
+    private void deleteNoteAt(int position) {
+        Note noteToDelete = notes.get(position);
+        noteController.delete(noteToDelete.getNote_id());
+        notes.remove(position);
+        notifyItemRemoved(position);
+        Toast.makeText(context, "Anotação excluída", Toast.LENGTH_SHORT).show();
     }
 
     @Override
@@ -68,12 +127,12 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {
         TextView titleTextView;
-        TextView textTextView;
+        TextView descriptionTextView;
 
         public NoteViewHolder(@NonNull View itemView) {
             super(itemView);
             titleTextView = itemView.findViewById(R.id.note_title);
-            textTextView = itemView.findViewById(R.id.note_text);
+            descriptionTextView = itemView.findViewById(R.id.note_text);
         }
     }
 }
