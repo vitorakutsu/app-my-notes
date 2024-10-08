@@ -35,6 +35,7 @@ public class NoteController {
                     note.setNote_title(cursor.getString(cursor.getColumnIndex("note_title")));
                     note.setNote_text(cursor.getString(cursor.getColumnIndex("note_text")));
                     note.setNote_priority(cursor.getString(cursor.getColumnIndex("note_priority")));
+                    note.setImage_url(cursor.getString(cursor.getColumnIndex("image_url")));
                     notes.add(note);
                 }while(cursor.moveToNext());
             }

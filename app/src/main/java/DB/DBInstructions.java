@@ -5,7 +5,7 @@ import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
 
 public class DBInstructions extends SQLiteOpenHelper {
-    private static final int VERSAO = 1;
+    private static final int VERSAO = 3;
     private static final String DATABASE_NAME = "mynotes.db";
 
     public DBInstructions(Context context) {
@@ -18,7 +18,8 @@ public class DBInstructions extends SQLiteOpenHelper {
                 "(note_id INTEGER PRIMARY KEY AUTOINCREMENT, " +
                 "note_title VARCHAR(50), " +
                 "note_text VARCHAR(200), " +
-                "note_priority VARCHAR(10));");
+                "note_priority VARCHAR(10), " +
+                "image_url VARCHAR(200))");
     }
 
     @Override

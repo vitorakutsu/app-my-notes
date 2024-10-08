@@ -22,6 +22,7 @@ public class NoteService {
         contentValues.put("note_title", note.getNote_title());
         contentValues.put("note_text", note.getNote_text());
         contentValues.put("note_priority", note.getNote_priority());
+        contentValues.put("image_url", note.getImage_url());
 
         connection.connect();
         long id = connection.create("notes", contentValues);

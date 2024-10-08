@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Tema principal da aplicação -->
+    <style name="AppTheme" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Personalize o tema principal aqui, sem janela de fundo pré-definida -->
+        <item name="android:windowBackground">@null</item>
+    </style>
+
+    <!-- Tema para a Splash Screen personalizada -->
+    <style name="Theme.SplashScreen" parent="Theme.AppCompat.Light.NoActionBar">
+        <!-- Fundo da splash screen -->
+        <item name="android:windowBackground">@drawable/splash_screen_background</item>
+        <!-- Escondendo a barra de ação -->
+        <item name="windowNoTitle">true</item>
+        <item name="windowActionBar">false</item>
+    </style>
+</resources>

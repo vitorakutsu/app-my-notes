@@ -1,32 +1,47 @@
 package br.com.mynotes;
 
+import android.app.Activity;
 import android.app.AlertDialog;
 import android.app.Dialog;
+import android.content.Intent;
+import android.content.pm.PackageManager;
+import android.database.Cursor;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.net.Uri;
 import android.os.Bundle;
-import android.util.Log;
+import android.os.Environment;
+import android.provider.MediaStore;
+import android.util.Base64;
 import android.view.Menu;
 import android.view.MenuInflater;
-import android.view.MenuItem;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
 import android.widget.Toast;
-
 import androidx.activity.EdgeToEdge;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.PopupMenu;
 import androidx.appcompat.widget.Toolbar;
 import androidx.constraintlayout.widget.ConstraintLayout;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
 import androidx.core.graphics.Insets;
 import androidx.core.view.ViewCompat;
 import androidx.core.view.WindowInsetsCompat;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import android.Manifest;
 
+import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -41,11 +56,57 @@ public class MainActivity extends AppCompatActivity {
     private NoteAdapter noteAdapter;
     private List<Note> notes = new ArrayList<>();
     private NoteController noteController;
+    private String imagePath;
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu, menu);
         return true;
+    }
+
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if (requestCode == 102 && data != null && data.getData() != null) {
+            Uri imageUri = data.getData();
+            try {
+                Bitmap imageBitmap = MediaStore.Images.Media.getBitmap(this.getContentResolver(), imageUri);
+                Uri savedImageUri = saveImageToExternalStorage(imageBitmap);
+                if (savedImageUri != null) {
+                    this.imagePath = getRealPathFromURI(savedImageUri);
+                } else {
+                    Toast.makeText(this, "Erro ao salvar a imagem da galeria", Toast.LENGTH_SHORT).show();
+                }
+            } catch (IOException e) {
+                e.printStackTrace();
+                Toast.makeText(this, "Erro ao processar a imagem da galeria", Toast.LENGTH_SHORT).show();
+            }
+        } else if (requestCode == 103 && resultCode == RESULT_OK) {
+            Bundle extras = data.getExtras();
+            if (extras != null) {
+                Bitmap imageBitmap = (Bitmap) extras.get("data");
+                Uri imageUri = saveImageToExternalStorage(imageBitmap);
+                if (imageUri != null) {
+                    this.imagePath = getRealPathFromURI(imageUri);
+                } else {
+                    Toast.makeText(this, "Erro ao salvar a imagem da câmera", Toast.LENGTH_SHORT).show();
+                }
+            }
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+
+        if (requestCode == 103) {
+            if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                openCamera();
+            } else {
+                Toast.makeText(this, "Permissões necessárias não foram concedidas", Toast.LENGTH_SHORT).show();
+            }
+        }
     }
 
     @Override
@@ -59,6 +120,10 @@ public class MainActivity extends AppCompatActivity {
             v.setPadding(systemBars.left, systemBars.top, systemBars.right, systemBars.bottom);
             return insets;
         });
+
+        if (ContextCompat.checkSelfPermission(this, Manifest.permission.READ_EXTERNAL_STORAGE) != PackageManager.PERMISSION_GRANTED) {
+            ActivityCompat.requestPermissions(this, new String[]{Manifest.permission.READ_EXTERNAL_STORAGE}, 102);
+        }
 
         ImageButton imageButton = findViewById(R.id.imageButton);
         imageButton.setOnClickListener(v -> showPopupMenu(v));
@@ -88,6 +153,11 @@ public class MainActivity extends AppCompatActivity {
         Spinner prioritySpinner = dialog.findViewById(R.id.spinner_priority);
         Button confirmButton = dialog.findViewById(R.id.btn_confirm);
         Button cancelButton = dialog.findViewById(R.id.btn_cancel);
+        Button btnTakePicture = dialog.findViewById(R.id.btn_Take_Picture);
+
+        btnTakePicture.setOnClickListener(v -> {
+            showImageOptions();
+        });
 
         confirmButton.setOnClickListener(v -> {
             String title = NoteUtils.formatNoteTitle(titleEditText.getText().toString());
@@ -103,7 +173,7 @@ public class MainActivity extends AppCompatActivity {
                 return;
             }
 
-            Note newNote = new Note(title, description, NoteUtils.getPriority(priority));
+            Note newNote = new Note(title, description, NoteUtils.getPriority(priority), this.imagePath);
             noteController.create(newNote);
 
             notes.add(newNote);
@@ -129,6 +199,7 @@ public class MainActivity extends AppCompatActivity {
         TextView titleTextView = dialog.findViewById(R.id.noteTitle);
         TextView descriptionTextView = dialog.findViewById(R.id.noteDescription);
         TextView priorityTextView = dialog.findViewById(R.id.notePriority);
+        ImageView noteImageView = dialog.findViewById(R.id.imageNote);
         Button closeButton = dialog.findViewById(R.id.btn_close);
 
         titleTextView.setText(NoteUtils.formatNoteTitle(note.getNote_title()));
@@ -136,10 +207,30 @@ public class MainActivity extends AppCompatActivity {
         priorityTextView.setText(NoteUtils.getPtBrPriority(note.getNote_priority()));
         priorityTextView.setTextColor(NoteUtils.getColorForPriority(MainActivity.this, note.getNote_priority()));
 
+        if(note.getImage_url() != null){
+            File imgFile = new File(note.getImage_url());
+            if(imgFile.exists()){
+                Bitmap bitmap = BitmapFactory.decodeFile(note.getImage_url());
+                if(bitmap != null){
+                    noteImageView.setImageBitmap(bitmap);
+                }
+                else{
+                    noteImageView.setImageResource(android.R.drawable.ic_menu_camera);
+                }
+            } else {
+                noteImageView.setImageResource(android.R.drawable.ic_menu_camera);
+            }
+        }
+        else{
+            noteImageView.setImageResource(android.R.drawable.ic_menu_camera);
+        }
+
+
         closeButton.setOnClickListener(v -> dialog.dismiss());
 
         dialog.show();
     }
+
 
     private void showPopupMenu(View view) {
         PopupMenu popupMenu = new PopupMenu(this, view);
@@ -187,9 +278,89 @@ public class MainActivity extends AppCompatActivity {
                     note.getNote_id(),
                     note.getNote_title(),
                     note.getNote_text(),
-                    note.getNote_priority()
+                    note.getNote_priority(),
+                    note.getImage_url()
             ));
         }
         noteAdapter.notifyDataSetChanged();
     }
+
+    private void showImageOptions() {
+        final CharSequence[] options = {"Tirar Foto", "Escolher da Galeria", "Cancelar"};
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(MainActivity.this);
+        builder.setTitle("Escolha uma opção");
+        builder.setItems(options, (dialog, which) -> {
+            if (options[which].equals("Tirar Foto")) {
+                openCamera();
+            } else if (options[which].equals("Escolher da Galeria")) {
+                openGallery();
+            } else if (options[which].equals("Cancelar")) {
+                dialog.dismiss();
+            }
+        });
+        builder.show();
+    }
+
+
+    private void openGallery() {
+        Intent galleryIntent = new Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI);
+        startActivityForResult(galleryIntent, 102);
+    }
+
+    private void openCamera() {
+        Intent cameraIntent = new Intent(MediaStore.ACTION_IMAGE_CAPTURE);
+        startActivityForResult(cameraIntent, 103);
+    }
+
+
+    private String getRealPathFromURI(Uri contentUri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = null;
+        String path = null;
+
+        try {
+            cursor = getContentResolver().query(contentUri, projection, null, null, null);
+            if (cursor != null && cursor.moveToFirst()) {
+                int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+                path = cursor.getString(column_index);
+            } else {
+                path = contentUri.getPath();
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        } finally {
+            if (cursor != null) {
+                cursor.close();
+            }
+        }
+        return path;
+    }
+
+    private Uri saveImageToExternalStorage(Bitmap bitmap) {
+        if (bitmap == null) {
+            return null;
+        }
+
+        String fileName = "image_" + System.currentTimeMillis() + ".jpg";
+        File file = new File(getExternalFilesDir(Environment.DIRECTORY_PICTURES), fileName);
+
+        try (FileOutputStream fos = new FileOutputStream(file)) {
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, fos);
+            fos.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+            return null;
+        }
+
+        return Uri.fromFile(file);
+    }
+
+    private String convertBitmapToBase64(Bitmap bitmap) {
+        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+        bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+        byte[] byteArray = byteArrayOutputStream.toByteArray();
+        return Base64.encodeToString(byteArray, Base64.DEFAULT);
+    }
+
 }

@@ -1,7 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="wrap_content"
+    android:layout_height="match_parent"
     android:orientation="vertical"
     android:padding="16dp">
 
@@ -40,6 +42,12 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp" />
 
+    <ImageView
+        android:id="@+id/imageNote"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        tools:srcCompat="@tools:sample/avatars" />
+
     <!-- Botão de fechar -->
     <Button
         android:id="@+id/btn_close"
@@ -48,4 +56,5 @@
         android:layout_marginTop="16dp"
         android:backgroundTint="#FF876C"
         android:text="Fechar" />
+
 </LinearLayout>

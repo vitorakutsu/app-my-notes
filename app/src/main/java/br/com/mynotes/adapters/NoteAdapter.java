@@ -2,13 +2,17 @@ package br.com.mynotes.adapters;
 
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.drawable.GradientDrawable;
 import android.os.Handler;
+import android.util.Log;
 import android.view.GestureDetector;
 import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -63,7 +67,6 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
                 @Override
                 public boolean onSingleTapUp(MotionEvent e) {
-                    // Detect a short click (tap up) and show note details
                     if (context instanceof MainActivity) {
                         ((MainActivity) context).showNoteDetailsModal(note);
                     } else {
