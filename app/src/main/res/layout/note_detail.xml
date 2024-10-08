@@ -38,7 +38,6 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="8dp" />
 
-<<<<<<< HEAD
     <ImageView
         android:id="@+id/imageNote"
         android:layout_width="match_parent"
@@ -46,8 +45,6 @@
         tools:srcCompat="@tools:sample/avatars" />
 
     <!-- Botão de fechar -->
-=======
->>>>>>> 47fedaaa8231a2f6912bbbfb1133f760bbb9e642
     <Button
         android:id="@+id/btn_close"
         android:layout_width="match_parent"

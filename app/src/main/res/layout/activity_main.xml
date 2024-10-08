@@ -78,10 +78,7 @@
         android:id="@+id/recycler_view"
         android:layout_width="0dp"
         android:layout_height="0dp"
-<<<<<<< HEAD
-=======
         android:layout_marginTop="4dp"
->>>>>>> 47fedaaa8231a2f6912bbbfb1133f760bbb9e642
         android:clipToPadding="false"
         android:padding="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
