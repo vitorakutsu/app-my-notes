@@ -52,7 +52,6 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
     public void onBindViewHolder(@NonNull NoteViewHolder holder, @SuppressLint("RecyclerView") int position) {
         Note note = notes.get(position);
         holder.titleTextView.setText(note.getNote_title());
-        holder.descriptionTextView.setText(note.getNote_text());
 
         String priority = NoteUtils.getPriority(note.getNote_priority());
         GradientDrawable drawable = NoteUtils.createNoteBackground(context, priority);
@@ -130,12 +129,10 @@ public class NoteAdapter extends RecyclerView.Adapter<NoteAdapter.NoteViewHolder
 
     public static class NoteViewHolder extends RecyclerView.ViewHolder {
         TextView titleTextView;
-        TextView descriptionTextView;
 
         public NoteViewHolder(@NonNull View itemView) {
             super(itemView);
             titleTextView = itemView.findViewById(R.id.note_title);
-            descriptionTextView = itemView.findViewById(R.id.note_text);
         }
     }
 }
